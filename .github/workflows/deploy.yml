@@ -34,11 +34,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Show Azure account
+      - name: Verify Azure login
         run: az account show
 
-      - name: Deploy
-        uses: azure/webapps-deploy@v3
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2.2.9
         with:
           app-name: wa-cars-veres-norbert-server
           package: .
+          images: ''

@@ -40,6 +40,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2.2.9
         with:
-          app-name: wa-cars-veres-norbert-server
+          app-name: wa-cars-veres-norbert
           package: .
           images: ''

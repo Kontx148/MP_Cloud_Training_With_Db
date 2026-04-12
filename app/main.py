@@ -18,7 +18,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+# asd
 Base.metadata.create_all(bind=engine)
 
 BASE_DIR = Path(__file__).resolve().parent.parent

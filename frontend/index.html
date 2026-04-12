@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cars Dashboard</title>
+  <link rel="stylesheet" href="styles/style.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">FastAPI + MySQL</p>
+        <h1>Cars Dashboard</h1>
+        <p class="subtitle">Create cars and view everything stored in your backend.</p>
+      </div>
+      <button id="refreshBtn" class="secondary-btn">Refresh List</button>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Add a new car</h2>
+        <form id="carForm" class="car-form">
+          <div class="field">
+            <label for="brand">Brand</label>
+            <input id="brand" name="brand" type="text" maxlength="100" placeholder="Toyota" required />
+          </div>
+
+          <div class="field">
+            <label for="model">Model</label>
+            <input id="model" name="model" type="text" maxlength="100" placeholder="Corolla" required />
+          </div>
+
+          <div class="field">
+            <label for="year">Year</label>
+            <input id="year" name="year" type="number" min="1886" max="2100" placeholder="2024" required />
+          </div>
+
+          <div class="field">
+            <label for="color">Color</label>
+            <input id="color" name="color" type="text" maxlength="50" placeholder="Blue" required />
+          </div>
+
+          <button type="submit" class="primary-btn">Save Car</button>
+        </form>
+        <p id="message" class="message"></p>
+      </article>
+
+      <article class="card">
+        <div class="section-header">
+          <h2>Saved cars</h2>
+          <span id="countBadge" class="badge">0 cars</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Year</th>
+                <th>Color</th>
+              </tr>
+            </thead>
+            <tbody id="carsTableBody">
+              <tr>
+                <td colspan="5" class="empty">No cars loaded yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:8000';
+
+    const form = document.getElementById('carForm');
+    const message = document.getElementById('message');
+    const tableBody = document.getElementById('carsTableBody');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const countBadge = document.getElementById('countBadge');
+
+    function showMessage(text, type = 'info') {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    function renderCars(cars) {
+      countBadge.textContent = `${cars.length} car${cars.length === 1 ? '' : 's'}`;
+
+      if (!cars.length) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty">No cars found in the database.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = cars.map(car => `
+        <tr>
+          <td>${car.id}</td>
+          <td>${car.brand}</td>
+          <td>${car.model}</td>
+          <td>${car.year}</td>
+          <td>${car.color}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function fetchCars() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/cars`);
+        if (!response.ok) {
+          throw new Error('Failed to load cars.');
+        }
+        const cars = await response.json();
+        renderCars(cars);
+      } catch (error) {
+        renderCars([]);
+        showMessage(error.message, 'error');
+      }
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const payload = {
+        brand: form.brand.value.trim(),
+        model: form.model.value.trim(),
+        year: Number(form.year.value),
+        color: form.color.value.trim(),
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/cars`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const detail = errorData.detail ? JSON.stringify(errorData.detail) : 'Failed to save car.';
+          throw new Error(detail);
+        }
+
+        form.reset();
+        showMessage('Car created successfully.', 'success');
+        fetchCars();
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    });
+
+    refreshBtn.addEventListener('click', fetchCars);
+
+    fetchCars();
+  </script>
+</body>
+</html>
